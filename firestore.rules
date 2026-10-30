@@ -1,0 +1,116 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isUser(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        (request.auth.token.email == "sirrodstephen@gmail.com")
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128;
+    }
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Admin authorization roster
+    match /admins/{adminId} {
+      allow read: if isSignedIn() && (request.auth.uid == adminId || isAdmin());
+      allow write: if isAdmin() || (
+        isSignedIn() && (
+          request.auth.token.email == "sirrodstephen@gmail.com" ||
+          request.resource.data.passcode == "elon2026"
+        )
+      );
+    }
+
+    // Public technology products catalog
+    match /products/{productId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Public technology articles & research
+    match /articles/{articleId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Private one-to-one conversations
+    match /conversations/{conversationId} {
+      allow get: if (
+        (isSignedIn() && (resource.data.visitorId == request.auth.uid || isAdmin())) ||
+        (conversationId.matches('^conv_guest-.*'))
+      );
+      allow list: if (
+        (isSignedIn() && (resource.data.visitorId == request.auth.uid || isAdmin())) ||
+        (conversationId.matches('^conv_guest-.*'))
+      );
+      allow create: if (
+        (isSignedIn() && (request.resource.data.visitorId == request.auth.uid || isAdmin())) ||
+        (conversationId.matches('^conv_guest-.*'))
+      );
+      allow update: if (
+        (isSignedIn() && (resource.data.visitorId == request.auth.uid || isAdmin())) ||
+        (conversationId.matches('^conv_guest-.*'))
+      );
+      allow delete: if isAdmin();
+
+      // Messages in conversation
+      match /messages/{messageId} {
+        allow read: if (
+          (isSignedIn() && (conversationId == ('conv_' + request.auth.uid) || isAdmin())) ||
+          (conversationId.matches('^conv_guest-.*'))
+        );
+        allow create: if (
+          (isSignedIn() && (conversationId == ('conv_' + request.auth.uid) || isAdmin())) ||
+          (conversationId.matches('^conv_guest-.*'))
+        );
+        allow update, delete: if isAdmin();
+      }
+    }
+
+    // User profiles
+    match /users/{userId} {
+      allow read: if (isSignedIn() && (request.auth.uid == userId || isAdmin())) || userId.matches('^guest-.*');
+      allow write: if (isSignedIn() && request.auth.uid == userId) || userId.matches('^guest-.*');
+    }
+
+    // User bookmarks
+    match /savedItems/{itemId} {
+      allow read, delete: if (isSignedIn() && resource.data.userId == request.auth.uid) || itemId.matches('^guest-.*');
+      allow create: if (isSignedIn() && request.resource.data.userId == request.auth.uid) || itemId.matches('^guest-.*');
+    }
+
+    // User investment watchlists
+    match /investmentWatchlists/{watchId} {
+      allow read, delete: if (isSignedIn() && resource.data.userId == request.auth.uid) || watchId.matches('^watch_guest-.*');
+      allow create: if (isSignedIn() && request.resource.data.userId == request.auth.uid) || watchId.matches('^watch_guest-.*');
+    }
+
+    // Flagged conversation and message reports
+    match /reports/{reportId} {
+      allow create: if isSignedIn() || request.resource.data.reporterId.matches('^guest-.*');
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Administrative audit logs
+    match /adminAuditLogs/{logId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

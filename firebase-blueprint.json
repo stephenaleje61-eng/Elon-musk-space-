@@ -1,0 +1,209 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Registered or anonymous visitor profile",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase user ID" },
+        "displayName": { "type": "string", "description": "Display name or anonymous alias", "maxLength": 100 },
+        "email": { "type": "string", "description": "User email if authenticated", "maxLength": 150 },
+        "isAnonymous": { "type": "boolean", "description": "Whether user is anonymous" },
+        "role": { "type": "string", "description": "Role string ('admin' | 'user')", "enum": ["user", "admin"] },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Account creation ISO or timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update ISO or timestamp" }
+      },
+      "required": ["uid", "isAnonymous"]
+    },
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Designation of verified platform administrator",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "description": "Administrator email address", "maxLength": 150 },
+        "role": { "type": "string", "description": "Admin level", "enum": ["superadmin", "admin"] },
+        "grantedAt": { "type": "string", "format": "date-time", "description": "Timestamp when admin access was granted" }
+      },
+      "required": ["email", "role"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Technology marketplace product or equipment item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique product ID" },
+        "title": { "type": "string", "description": "Product title", "maxLength": 150 },
+        "sectionId": { "type": "string", "description": "One of 9 section identifiers", "maxLength": 50 },
+        "subcategory": { "type": "string", "description": "Subcategory or product line", "maxLength": 80 },
+        "price": { "type": "number", "description": "Estimated price in USD (0 if enterprise/quote)" },
+        "currency": { "type": "string", "description": "Currency code", "maxLength": 5 },
+        "summary": { "type": "string", "description": "Brief summary", "maxLength": 250 },
+        "description": { "type": "string", "description": "Comprehensive specifications and overview", "maxLength": 5000 },
+        "images": { "type": "array", "description": "List of permanent image URLs" },
+        "specs": { "type": "object", "description": "Key technical specifications" },
+        "inStock": { "type": "boolean", "description": "Availability state" },
+        "stockStatus": { "type": "string", "description": "Production or order status", "maxLength": 60 },
+        "isFeatured": { "type": "boolean", "description": "Whether highlighted on homepage" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Created timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Updated timestamp" }
+      },
+      "required": ["id", "title", "sectionId", "inStock"]
+    },
+    "Article": {
+      "title": "Article",
+      "description": "Official update, technical breakdown, or research publication",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique article ID" },
+        "title": { "type": "string", "description": "Article title", "maxLength": 200 },
+        "sectionId": { "type": "string", "description": "Associated section identifier", "maxLength": 50 },
+        "category": { "type": "string", "description": "Category badge", "maxLength": 50 },
+        "excerpt": { "type": "string", "description": "Short excerpt", "maxLength": 300 },
+        "content": { "type": "string", "description": "Full markdown or formatted article content", "maxLength": 15000 },
+        "author": { "type": "string", "description": "Author or source attribution", "maxLength": 100 },
+        "coverImage": { "type": "string", "description": "URL to cover image", "maxLength": 500 },
+        "readTime": { "type": "string", "description": "Read duration string", "maxLength": 30 },
+        "isFeatured": { "type": "boolean", "description": "Featured status" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Publication timestamp" }
+      },
+      "required": ["id", "title", "sectionId", "content"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "Private individual chat session with the administrator",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Conversation ID matches visitor UID or unique key" },
+        "visitorId": { "type": "string", "description": "UID of visitor participant" },
+        "visitorName": { "type": "string", "description": "Display name of visitor", "maxLength": 100 },
+        "visitorEmail": { "type": "string", "description": "Email if visitor is authenticated", "maxLength": 150 },
+        "isAnonymous": { "type": "boolean", "description": "Whether visitor is anonymous" },
+        "lastMessage": { "type": "string", "description": "Preview snippet of last message", "maxLength": 500 },
+        "lastMessageAt": { "type": "string", "format": "date-time", "description": "Timestamp of latest activity" },
+        "unreadUserCount": { "type": "number", "description": "Unread count for the user" },
+        "unreadAdminCount": { "type": "number", "description": "Unread count for the administrator" },
+        "status": { "type": "string", "enum": ["active", "blocked", "archived"], "description": "Conversation status" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Initiation timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp" }
+      },
+      "required": ["id", "visitorId", "status"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Individual message inside a private conversation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique message ID" },
+        "conversationId": { "type": "string", "description": "Parent conversation ID" },
+        "senderId": { "type": "string", "description": "Sender UID" },
+        "senderRole": { "type": "string", "enum": ["visitor", "admin"], "description": "Role of the sender" },
+        "text": { "type": "string", "description": "Message content", "maxLength": 3000 },
+        "imageUrl": { "type": "string", "description": "Optional image attachment URL", "maxLength": 500 },
+        "isRead": { "type": "boolean", "description": "Read status receipt" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Send timestamp" }
+      },
+      "required": ["id", "conversationId", "senderId", "senderRole", "createdAt"]
+    },
+    "SavedItem": {
+      "title": "SavedItem",
+      "description": "User bookmarked or saved product",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Record ID" },
+        "userId": { "type": "string", "description": "UID of user who saved item" },
+        "productId": { "type": "string", "description": "Product ID" },
+        "productTitle": { "type": "string", "description": "Product title cache", "maxLength": 150 },
+        "productPrice": { "type": "number", "description": "Price snapshot" },
+        "productImage": { "type": "string", "description": "Product image thumbnail", "maxLength": 500 },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Saved timestamp" }
+      },
+      "required": ["id", "userId", "productId"]
+    },
+    "InvestmentWatchlist": {
+      "title": "InvestmentWatchlist",
+      "description": "Personal investor watch symbol and alerts",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Watch item ID" },
+        "userId": { "type": "string", "description": "Owner user UID" },
+        "symbol": { "type": "string", "description": "Stock or venture symbol (e.g. TSLA)", "maxLength": 20 },
+        "companyName": { "type": "string", "description": "Company name", "maxLength": 100 },
+        "targetPrice": { "type": "number", "description": "Target price alert" },
+        "notes": { "type": "string", "description": "Personal investment notes", "maxLength": 500 },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Watch entry creation date" }
+      },
+      "required": ["id", "userId", "symbol"]
+    },
+    "Report": {
+      "title": "Report",
+      "description": "Flagged conversation or inquiry report",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Report ID" },
+        "reporterId": { "type": "string", "description": "UID of person reporting" },
+        "conversationId": { "type": "string", "description": "Flagged conversation ID" },
+        "reason": { "type": "string", "description": "Reason for report", "maxLength": 500 },
+        "status": { "type": "string", "enum": ["pending", "reviewed", "dismissed"], "description": "Triage status" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Report submission timestamp" }
+      },
+      "required": ["id", "reporterId", "reason", "status"]
+    },
+    "AdminAuditLog": {
+      "title": "AdminAuditLog",
+      "description": "Immutable log of administrative operations",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Log entry ID" },
+        "adminId": { "type": "string", "description": "UID of admin" },
+        "adminEmail": { "type": "string", "description": "Admin email", "maxLength": 150 },
+        "action": { "type": "string", "description": "Action executed", "maxLength": 100 },
+        "targetId": { "type": "string", "description": "Target resource ID", "maxLength": 100 },
+        "details": { "type": "string", "description": "Details description", "maxLength": 1000 },
+        "timestamp": { "type": "string", "format": "date-time", "description": "Execution timestamp" }
+      },
+      "required": ["id", "adminId", "action"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Individual visitor profile data"
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminRecord" },
+      "description": "Trusted administrative roles collection"
+    },
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Public technology marketplace catalog products"
+    },
+    "/articles/{articleId}": {
+      "schema": { "$ref": "#/entities/Article" },
+      "description": "Public research articles and company tech updates"
+    },
+    "/conversations/{conversationId}": {
+      "schema": { "$ref": "#/entities/Conversation" },
+      "description": "Private chat channel between visitor and admin"
+    },
+    "/conversations/{conversationId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/Message" },
+      "description": "Real-time messages belonging to a specific conversation"
+    },
+    "/savedItems/{itemId}": {
+      "schema": { "$ref": "#/entities/SavedItem" },
+      "description": "User saved products and catalog items"
+    },
+    "/investmentWatchlists/{watchId}": {
+      "schema": { "$ref": "#/entities/InvestmentWatchlist" },
+      "description": "Personal investment watchlists and target price alerts"
+    },
+    "/reports/{reportId}": {
+      "schema": { "$ref": "#/entities/Report" },
+      "description": "Visitor and conversation flag reports"
+    },
+    "/adminAuditLogs/{logId}": {
+      "schema": { "$ref": "#/entities/AdminAuditLog" },
+      "description": "Admin audit log tracking administrative activities"
+    }
+  }
+}
